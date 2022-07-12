@@ -96,11 +96,11 @@ class Generation:
                 if atom_number == 0:
                     continue
                 elif atom_number == 1:
-                    fragment_name = fragment_name + atoms
+                    fragment_name = fragment_name + self.to_sup(str(round(Atom(atoms).mass))) + atoms
                 else :
-                    fragment_name = fragment_name + atoms + str(atom_number)
+                    fragment_name = fragment_name + self.to_sup(str(round(Atom(atoms).mass))) + atoms + str(atom_number)
                 atom_mass = Atom(atoms).mass
-                fragment_mass = round(fragment_mass + atom_mass * atom_number, 3)
+                fragment_mass = round(fragment_mass + atom_mass * atom_number)
             true_fragments_list.append(fragment_name)
             if str(fragment_mass) not in dict_by_mass:
                 dict_by_mass[str(fragment_mass)] = [fragment_name]
@@ -146,6 +146,19 @@ class Generation:
         list_bonded = list(set(list_bonded))
         tuple_extra = tuple(set(tuple_extra))
         return list_bonded, tuple_extra
+    
+    def to_sup(self, s):
+        sups = {u'0': u'\u2070',
+                u'1': u'\xb9',
+                u'2': u'\xb2',
+                u'3': u'\xb3',
+                u'4': u'\u2074',
+                u'5': u'\u2075',
+                u'6': u'\u2076',
+                u'7': u'\u2077',
+                u'8': u'\u2078',
+                u'9': u'\u2079'}
+        return ''.join(sups.get(char, char) for char in s)
 
 class Atom:
     def __init__(self, atom):
