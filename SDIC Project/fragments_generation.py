@@ -68,6 +68,12 @@ class Generation:
             combine_list.extend(list_i)
         possible_list = []# possible bonded combinations for two or more atoms
         
+        fragments_list = [''.join(re.findall(r'[A-Za-z]', x)) for x in fragments_list]
+        atom_list = []# list for atoms following the order of alphabet
+        for i in fragments_list:
+            atom_list.append(i)
+        atom_list = sorted(list(set(atom_list)))
+
         for combination in combine_list:
             list_bonded, tuple_extra = self.generate_combination(combination, bonded_list)
             pieces = ''.join(list_bonded)
@@ -79,11 +85,6 @@ class Generation:
                 possible_list.append(pieces_1)
                 del list_bonded_1
 
-        fragments_list = [''.join(re.findall(r'[A-Za-z]', x)) for x in fragments_list]
-        atom_list = []# list for atoms following the order of alphabet
-        for i in fragments_list:
-            atom_list.append(i)
-        atom_list = sorted(list(set(atom_list)))
         fragments_list.extend(possible_list)
         fragments_list = [x for x in fragments_list if x != '']
         fragments_list = list(set(fragments_list))
@@ -91,16 +92,43 @@ class Generation:
         for fragment in fragments_list:
             fragment_name = ''
             fragment_mass = 0.0
+            single_letter = ''
             for atoms in atom_list:
-                atom_number = fragment.count(atoms)
-                if atom_number == 0:
-                    continue
-                elif atom_number == 1:
-                    fragment_name = fragment_name + self.to_sup(str(round(Atom(atoms).mass))) + atoms
-                else :
-                    fragment_name = fragment_name + self.to_sup(str(round(Atom(atoms).mass))) + atoms + str(atom_number)
-                atom_mass = Atom(atoms).mass
-                fragment_mass = round(fragment_mass + atom_mass * atom_number)
+                if ''.join(atom_list).count(atoms) >= 2:
+                    single_letter = atoms
+                # else:
+                #     single_letter = 'something_else'
+            for atoms in atom_list:
+                if atoms.count(single_letter) == 1 and len(atoms) > 1:
+                    atom_number = fragment.count(atoms)
+                    single_number = fragment.count(single_letter)
+                    true_single_number = single_number - atom_number
+                    single_position = fragment_name.find(single_letter)
+                    if true_single_number == 0:
+                        fragment_name = fragment_name[0 : single_position - 2]
+                    elif true_single_number == 1:
+                        fragment_name = fragment_name[0 : single_position + 1]
+                    else:
+                        fragment_name = fragment_name[0 : single_position + 1] + str(true_single_number)
+                    if atom_number == 0:
+                        continue
+                    elif atom_number == 1:
+                        fragment_name = fragment_name + self.to_sup(str(round(Atom(atoms).mass))) + atoms
+                    else :
+                        fragment_name = fragment_name + self.to_sup(str(round(Atom(atoms).mass))) + atoms + str(atom_number)
+                    atom_mass = Atom(atoms).mass
+                    single_mass = Atom(single_letter).mass
+                    fragment_mass = round(fragment_mass + atom_mass * atom_number - single_mass * atom_number)
+                else:    
+                    atom_number = fragment.count(atoms)
+                    if atom_number == 0:
+                        continue
+                    elif atom_number == 1:
+                        fragment_name = fragment_name + self.to_sup(str(round(Atom(atoms).mass))) + atoms
+                    elif atom_number > 1:
+                        fragment_name = fragment_name + self.to_sup(str(round(Atom(atoms).mass))) + atoms + str(atom_number)
+                    atom_mass = Atom(atoms).mass
+                    fragment_mass = round(fragment_mass + atom_mass * atom_number)
             true_fragments_list.append(fragment_name)
             if str(fragment_mass) not in dict_by_mass:
                 dict_by_mass[str(fragment_mass)] = [fragment_name]
