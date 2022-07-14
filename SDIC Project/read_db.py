@@ -3,7 +3,7 @@ import sqlite3
 def connection(molecule):
     conn = sqlite3.connect("data-20.db")
     cursor = conn.cursor()
-    sql = """select * from name"""
+    sql = """select * from eighty"""
     cursor.execute(sql)
     result = cursor.fetchall()
     dict_fragments = {}

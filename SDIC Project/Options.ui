@@ -6,9 +6,15 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>400</width>
-    <height>300</height>
+    <width>1000</width>
+    <height>800</height>
    </rect>
+  </property>
+  <property name="minimumSize">
+   <size>
+    <width>1000</width>
+    <height>400</height>
+   </size>
   </property>
   <property name="windowTitle">
    <string>Options</string>
@@ -17,16 +23,145 @@
    <item>
     <layout class="QVBoxLayout" name="verticalLayout">
      <item>
-      <widget class="QPlainTextEdit" name="InputInformation">
+      <widget class="QLineEdit" name="energy_level">
+       <property name="font">
+        <font>
+         <family>Calibri</family>
+         <pointsize>12</pointsize>
+        </font>
+       </property>
+       <property name="text">
+        <string/>
+       </property>
        <property name="placeholderText">
-        <string>Please input your experimental data</string>
+        <string>Please input the electron energy level of your data!  e.g. please input 'eighty' for 80eV</string>
        </property>
       </widget>
      </item>
      <item>
+      <widget class="QTableWidget" name="input_table">
+       <property name="enabled">
+        <bool>true</bool>
+       </property>
+       <attribute name="horizontalHeaderShowSortIndicator" stdset="0">
+        <bool>true</bool>
+       </attribute>
+       <attribute name="horizontalHeaderStretchLastSection">
+        <bool>true</bool>
+       </attribute>
+       <row>
+        <property name="text">
+         <string/>
+        </property>
+       </row>
+       <column>
+        <property name="text">
+         <string>name</string>
+        </property>
+       </column>
+       <column>
+        <property name="text">
+         <string>cas number</string>
+        </property>
+       </column>
+       <column>
+        <property name="text">
+         <string>nist_mass_spec_number</string>
+        </property>
+       </column>
+       <column>
+        <property name="text">
+         <string>formula</string>
+        </property>
+       </column>
+       <column>
+        <property name="text">
+         <string>charge-mass ratio</string>
+        </property>
+       </column>
+       <column>
+        <property name="text">
+         <string>peak height</string>
+        </property>
+       </column>
+       <column>
+        <property name="text">
+         <string>branch ratio</string>
+        </property>
+       </column>
+       <column>
+        <property name="text">
+         <string>possible fragments</string>
+        </property>
+       </column>
+      </widget>
+     </item>
+     <item>
+      <layout class="QHBoxLayout" name="horizontalLayout">
+       <item>
+        <spacer name="horizontalSpacer">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>40</width>
+           <height>20</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+       <item>
+        <widget class="QPushButton" name="add_row">
+         <property name="font">
+          <font>
+           <family>Calibri</family>
+           <pointsize>12</pointsize>
+          </font>
+         </property>
+         <property name="text">
+          <string>Add Row</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="remove_row">
+         <property name="font">
+          <font>
+           <family>Calibri</family>
+           <pointsize>12</pointsize>
+          </font>
+         </property>
+         <property name="text">
+          <string>Remove Row</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="update_button">
+         <property name="font">
+          <font>
+           <family>Calibri</family>
+           <pointsize>12</pointsize>
+          </font>
+         </property>
+         <property name="text">
+          <string>Update</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </item>
+     <item>
       <widget class="QPushButton" name="PossibleOptions">
+       <property name="font">
+        <font>
+         <family>Calibri</family>
+         <pointsize>12</pointsize>
+        </font>
+       </property>
        <property name="text">
-        <string>Possible Options</string>
+        <string>Submit Experimental Data</string>
        </property>
       </widget>
      </item>

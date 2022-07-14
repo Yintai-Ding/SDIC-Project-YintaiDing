@@ -12,8 +12,7 @@ class Branching_Ratios(QtWidgets.QMainWindow):
     def __init__(self):
         super(Branching_Ratios, self).__init__()
         self.ui = QUiLoader().load('brief sample.ui')
-        self.ui.OptionButton.clicked.connect(self.open_options)
-        # self.ui.ComputeRatios.clicked.connect(self.status_check)        
+        self.ui.OptionButton.clicked.connect(self.open_options)       
         self.ui.RunButton.clicked.connect(self.run)
         self.ui.MoleculeEdit.returnPressed.connect(self.run)
         self.ui.comboBox.addItems(['name', 'cas number', 'formula'])
@@ -23,9 +22,6 @@ class Branching_Ratios(QtWidgets.QMainWindow):
         checked = self.ui.ComputeRatios.isChecked()
         input = self.ui.MoleculeEdit.text()
         text = self.ui.comboBox.currentText()
-        # self.dlg = Options()
-        # text = self.dlg.InputInformation.toPlainText()
-        # print(text_experimental)
         if text == 'cas number':
             molecule = translate_cas(input)
         elif text == 'formula':
@@ -66,9 +62,6 @@ class Branching_Ratios(QtWidgets.QMainWindow):
     
     def open_options(self):
         self.dlg = Options()
-        # text_experimental = self.dlg.InputInformation.toPlainText()
-        # print(text_experimental)
-        # return text_experimental
 
     def chart(self, dict, dict_mass):
         string = 'Branching Ratio:      Charge_Mass Ratio:    Possible Fragments: \n'
@@ -82,16 +75,93 @@ class Options(QtWidgets.QDialog):
         self.ui.show()
         # text_experimental = self.ui.InputInformation.toPlainText()
         self.ui.PossibleOptions.clicked.connect(self.confirm_input)
+        self.ui.input_table.setColumnWidth(2, 250)
+        self.ui.input_table.setColumnWidth(4, 200)
+        self.ui.input_table.setColumnWidth(7, 200)
+        self.ui.add_row.clicked.connect(self.add_new_row)
+        self.ui.remove_row.clicked.connect(self.remove_new_row)
+        self.ui.update_button.clicked.connect(self.update_data)
 
     def confirm_input(self):
-        # print('message confirmed!')#Debug
-        text_experimental = self.ui.InputInformation.toPlainText()
-        print(text_experimental)
+        energy_level = str(self.ui.energy_level.text())
+        input_data = []
+        row_num = self.ui.input_table.rowCount()
+        for i in range(row_num):
+            list_input = []
+            for j in range(8):
+                input = str(self.ui.input_table.item(i, j))
+                if input == 'None':
+                    input = 'NULL'
+                else:
+                    input = str(self.ui.input_table.item(i, j).text())
+                list_input.append(input)
+            input_data.append(tuple(list_input))
+        self.sql_table(energy_level, input_data)
         QMessageBox.about(self.ui,
         'Result',
         'Input Confirmed!')
-        # print(text_experimental)
         self.ui.close()
+
+    def add_new_row(self):
+        self.ui.input_table.insertRow(0)
+
+    def remove_new_row(self):
+        self.ui.input_table.removeRow(0)
+
+    def update_data(self):
+        self.ui.input_table.update()
+
+    def sql_table(self, energy_level, data):
+        try:
+            con = sqlite3.connect("data-20.db")
+        except sqlite3.Error:
+            print(sqlite3.Error)
+        cursor = con.cursor()
+        cursor.execute(f"""SELECT name from sqlite_master WHERE type = "table" AND name = '{energy_level}'""")
+        exist_status = cursor.fetchall()
+        if exist_status == []:
+            cursor.execute(f"""create table if not exists '{energy_level}'(name text, cas text, nist_mass_spec_num text, formula text, charge_mass_ratio number, peak_height number, branch_ratio number, optional_fragment text)""")
+            cursor.executemany(f"""INSERT INTO '{energy_level}' VALUES(?, ?, ?, ?, ?, ?, ?, ?)""", data)
+        else:
+            molecule = data[0][0]
+            status = self.check_exist(energy_level, molecule)
+            if status == 0:
+                cursor.execute(f"""create table if not exists '{energy_level}'(name text, cas text, nist_mass_spec_num text, formula text, charge_mass_ratio number, peak_height number, branch_ratio number, optional_fragment text)""")
+                cursor.executemany(f"""INSERT INTO '{energy_level}' VALUES(?, ?, ?, ?, ?, ?, ?, ?)""", data)
+            elif status == 1:
+                for single_row in data:
+                    charge_mass_ratio = single_row[4]
+                    peak_height = single_row[5]
+                    branch_ratio = single_row[6]
+                    optional_fragment = single_row[7]
+                    cursor.execute(f"""select * from '{energy_level}' where name = '{molecule}'""")
+                    check_mass = cursor.fetchall()
+                    mass_exist = 0
+                    for sample in check_mass:
+                        if str(sample[4]) == charge_mass_ratio:
+                            mass_exist = 1
+                    if mass_exist == 1:
+                        cursor.execute(f"""UPDATE '{energy_level}' SET peak_height = '{peak_height}' where name = '{molecule}' AND charge_mass_ratio = '{charge_mass_ratio}'""")
+                        cursor.execute(f"""UPDATE '{energy_level}' SET branch_ratio = '{branch_ratio}' where name = '{molecule}' AND charge_mass_ratio = '{charge_mass_ratio}'""")
+                        cursor.execute(f"""UPDATE '{energy_level}' SET optional_fragment = '{optional_fragment}' where name = '{molecule}' AND charge_mass_ratio = '{charge_mass_ratio}'""")
+                    else:
+                        cursor.execute(f"""INSERT INTO '{energy_level}' VALUES(?, ?, ?, ?, ?, ?, ?, ?)""", single_row)
+        con.commit()
+        self.ui.input_table.update()
+        con.close()
+
+    def check_exist(self, energy_level, molcule):
+        conn = sqlite3.connect("data-20.db")
+        cursor = conn.cursor()
+        sql = f"""select * from '{energy_level}'"""
+        cursor.execute(sql)
+        result = cursor.fetchall()
+        status = 0
+        for from_db in result:
+            if from_db[0] == molcule:
+                status = 1
+        conn.close()
+        return status
 
 class show_fragments(QtWidgets.QDialog):
     def __init__(self):
