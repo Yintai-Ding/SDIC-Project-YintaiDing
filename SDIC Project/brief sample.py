@@ -1,120 +1,160 @@
-# -*- coding: utf-8 -*-
-
-################################################################################
-## Form generated from reading UI file 'brief sample.ui'
-##
-## Created by: Qt User Interface Compiler version 5.15.2
-##
-## WARNING! All changes made in this file will be lost when recompiling UI file!
-################################################################################
-
-from PySide2.QtCore import *
+from PySide2 import QtWidgets
+from PySide2.QtWidgets import QApplication, QMessageBox
+from PySide2.QtUiTools import QUiLoader
+from fragments_generation import *
+from read_db import *
 from PySide2.QtGui import *
-from PySide2.QtWidgets import *
+from PySide2.QtCore import *
+
+class Branching_Ratios(QtWidgets.QMainWindow):
+    signal_1 = Signal(str)
+    def __init__(self):
+        super(Branching_Ratios, self).__init__()
+        self.ui = QUiLoader().load('brief sample.ui')
+        self.ui.OptionButton.clicked.connect(self.open_options)       
+        self.ui.RunButton.clicked.connect(self.run)
+        self.ui.MoleculeEdit.returnPressed.connect(self.run)
+        self.ui.comboBox.addItems(['name', 'cas number', 'formula'])
+        
+
+    def run(self):
+        checked = self.ui.ComputeRatios.isChecked()
+        input = self.ui.MoleculeEdit.text()
+        text = self.ui.comboBox.currentText()
+        if text == 'cas number':
+            molecule = translate_cas(input)
+        elif text == 'formula':
+            molecule = translate_formula(input)
+        else:
+            molecule = str(input)
+
+        dict_fragments, dict_mass, total_ratio = connection(molecule)
+        if checked:
+            self.fragment = show_fragments()
+            self.signal_1.connect(self.fragment.PrintToGui)
+            self.signal_1.emit(self.chart(dict_fragments, dict_mass))
+            
+        else:
+            QMessageBox.about(self.ui,
+            'Outcomes',
+            "Don't forget to choose options!")
+    
+    def open_options(self):
+        self.dlg = Options()
+
+    def chart(self, dict, dict_mass):
+        string = 'Branching Ratio:      Charge_Mass Ratio:    Possible Fragments: \n'
+        for keys in dict:
+            string = string + f'''{round(float(keys), 7)}: \t\t\t{dict_mass[keys]}\t\t\t{dict[keys]}\n'''
+        return string
+
+class Options(QtWidgets.QDialog):
+    def __init__(self):
+        self.ui = QUiLoader().load('Options.ui')
+        self.ui.show()
+        # text_experimental = self.ui.InputInformation.toPlainText()
+        self.ui.PossibleOptions.clicked.connect(self.confirm_input)
+        self.ui.input_table.setColumnWidth(2, 250)
+        self.ui.input_table.setColumnWidth(4, 200)
+        self.ui.input_table.setColumnWidth(7, 200)
+        self.ui.add_row.clicked.connect(self.add_new_row)
+        self.ui.remove_row.clicked.connect(self.remove_new_row)
+        self.ui.update_button.clicked.connect(self.update_data)
+
+    def confirm_input(self):
+        energy_level = str(self.ui.energy_level.text())
+        if energy_level == '':
+            raise ValueError('The energy level input is necessary!')
+        input_data = []
+        row_num = self.ui.input_table.rowCount()
+        for i in range(row_num):
+            list_input = []
+            for j in range(8):
+                input = str(self.ui.input_table.item(i, j))
+                if input == 'None':
+                    input = 'nan'
+                else:
+                    input = str(self.ui.input_table.item(i, j).text())
+                list_input.append(input)
+            input_data.append(tuple(list_input))
+        self.sql_table(energy_level, input_data)
+        QMessageBox.about(self.ui,
+        'Result',
+        'Input Confirmed!')
+        self.ui.close()
+
+    def add_new_row(self):
+        self.ui.input_table.insertRow(0)
+
+    def remove_new_row(self):
+        self.ui.input_table.removeRow(0)
+
+    def update_data(self):
+        self.ui.input_table.update()
+
+    def sql_table(self, energy_level, data):
+        try:
+            con = sqlite3.connect("data-20.db")
+        except sqlite3.Error:
+            print(sqlite3.Error)
+        cursor = con.cursor()
+        cursor.execute(f"""SELECT name from sqlite_master WHERE type = "table" AND name = '{energy_level}'""")
+        exist_status = cursor.fetchall()
+        if exist_status == []:
+            cursor.execute(f"""create table if not exists '{energy_level}'(name text, cas text, nist_mass_spec_num text, formula text, charge_mass_ratio number, peak_height number, branch_ratio number, optional_fragment text)""")
+            cursor.executemany(f"""INSERT INTO '{energy_level}' VALUES(?, ?, ?, ?, ?, ?, ?, ?)""", data)
+        else:
+            molecule = data[0][0]
+            status = self.check_exist(energy_level, molecule)
+            if status == 0:
+                cursor.execute(f"""create table if not exists '{energy_level}'(name text, cas text, nist_mass_spec_num text, formula text, charge_mass_ratio number, peak_height number, branch_ratio number, optional_fragment text)""")
+                cursor.executemany(f"""INSERT INTO '{energy_level}' VALUES(?, ?, ?, ?, ?, ?, ?, ?)""", data)
+            elif status == 1:
+                for single_row in data:
+                    charge_mass_ratio = single_row[4]
+                    peak_height = single_row[5]
+                    branch_ratio = single_row[6]
+                    optional_fragment = single_row[7]
+                    cursor.execute(f"""select * from '{energy_level}' where name = '{molecule}'""")
+                    check_mass = cursor.fetchall()
+                    mass_exist = 0
+                    for sample in check_mass:
+                        if str(sample[4]) == charge_mass_ratio:
+                            mass_exist = 1
+                    if mass_exist == 1:
+                        cursor.execute(f"""UPDATE '{energy_level}' SET peak_height = '{peak_height}' where name = '{molecule}' AND charge_mass_ratio = '{charge_mass_ratio}'""")
+                        cursor.execute(f"""UPDATE '{energy_level}' SET branch_ratio = '{branch_ratio}' where name = '{molecule}' AND charge_mass_ratio = '{charge_mass_ratio}'""")
+                        cursor.execute(f"""UPDATE '{energy_level}' SET optional_fragment = '{optional_fragment}' where name = '{molecule}' AND charge_mass_ratio = '{charge_mass_ratio}'""")
+                    else:
+                        cursor.execute(f"""INSERT INTO '{energy_level}' VALUES(?, ?, ?, ?, ?, ?, ?, ?)""", single_row)
+        con.commit()
+        self.ui.input_table.update()
+        con.close()
+
+    def check_exist(self, energy_level, molcule):
+        conn = sqlite3.connect("data-20.db")
+        cursor = conn.cursor()
+        sql = f"""select * from '{energy_level}'"""
+        cursor.execute(sql)
+        result = cursor.fetchall()
+        status = 0
+        for from_db in result:
+            if from_db[0] == molcule:
+                status = 1
+        conn.close()
+        return status
+
+class show_fragments(QtWidgets.QDialog):
+    def __init__(self):
+        super(show_fragments, self).__init__()
+        self.ui = QUiLoader().load('show_fragments.ui')
+        self.ui.show()
+
+    def PrintToGui(self, text):
+        self.ui.textBrowser.setPlainText(str(text))
 
 
-class Ui_BranchingRatios(object):
-    def setupUi(self, BranchingRatios):
-        if not BranchingRatios.objectName():
-            BranchingRatios.setObjectName(u"BranchingRatios")
-        BranchingRatios.resize(1000, 500)
-        BranchingRatios.setMinimumSize(QSize(1000, 500))
-        self.centralwidget = QWidget(BranchingRatios)
-        self.centralwidget.setObjectName(u"centralwidget")
-        self.verticalLayout = QVBoxLayout(self.centralwidget)
-        self.verticalLayout.setObjectName(u"verticalLayout")
-        self.horizontalLayout = QHBoxLayout()
-        self.horizontalLayout.setObjectName(u"horizontalLayout")
-        self.comboBox = QComboBox(self.centralwidget)
-        self.comboBox.setObjectName(u"comboBox")
-        font = QFont()
-        font.setFamily(u"Calibri")
-        font.setPointSize(15)
-        self.comboBox.setFont(font)
-        self.comboBox.setEditable(False)
-        self.comboBox.setMaxVisibleItems(10)
-        self.comboBox.setMaxCount(2147483645)
-
-        self.horizontalLayout.addWidget(self.comboBox)
-
-        self.MoleculeEdit = QLineEdit(self.centralwidget)
-        self.MoleculeEdit.setObjectName(u"MoleculeEdit")
-        self.MoleculeEdit.setMinimumSize(QSize(0, 0))
-        self.MoleculeEdit.setFont(font)
-
-        self.horizontalLayout.addWidget(self.MoleculeEdit)
-
-
-        self.verticalLayout.addLayout(self.horizontalLayout)
-
-        self.CheckBoxLayout = QHBoxLayout()
-        self.CheckBoxLayout.setObjectName(u"CheckBoxLayout")
-        self.ComputeRatios = QCheckBox(self.centralwidget)
-        self.ComputeRatios.setObjectName(u"ComputeRatios")
-        self.ComputeRatios.setFont(font)
-
-        self.CheckBoxLayout.addWidget(self.ComputeRatios)
-
-        self.horizontalSpacer = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
-
-        self.CheckBoxLayout.addItem(self.horizontalSpacer)
-
-        self.OptionButton = QPushButton(self.centralwidget)
-        self.OptionButton.setObjectName(u"OptionButton")
-        sizePolicy = QSizePolicy(QSizePolicy.Minimum, QSizePolicy.Fixed)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.OptionButton.sizePolicy().hasHeightForWidth())
-        self.OptionButton.setSizePolicy(sizePolicy)
-        self.OptionButton.setFont(font)
-
-        self.CheckBoxLayout.addWidget(self.OptionButton)
-
-
-        self.verticalLayout.addLayout(self.CheckBoxLayout)
-
-        self.RunButtonLayout = QHBoxLayout()
-        self.RunButtonLayout.setObjectName(u"RunButtonLayout")
-        self.RunButtonLayout.setContentsMargins(0, 100, -1, -1)
-        self.horizontalSpacer_2 = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
-
-        self.RunButtonLayout.addItem(self.horizontalSpacer_2)
-
-        self.RunButton = QPushButton(self.centralwidget)
-        self.RunButton.setObjectName(u"RunButton")
-        sizePolicy1 = QSizePolicy(QSizePolicy.Maximum, QSizePolicy.Fixed)
-        sizePolicy1.setHorizontalStretch(0)
-        sizePolicy1.setVerticalStretch(0)
-        sizePolicy1.setHeightForWidth(self.RunButton.sizePolicy().hasHeightForWidth())
-        self.RunButton.setSizePolicy(sizePolicy1)
-        self.RunButton.setFont(font)
-
-        self.RunButtonLayout.addWidget(self.RunButton)
-
-
-        self.verticalLayout.addLayout(self.RunButtonLayout)
-
-        BranchingRatios.setCentralWidget(self.centralwidget)
-        self.menubar = QMenuBar(BranchingRatios)
-        self.menubar.setObjectName(u"menubar")
-        self.menubar.setGeometry(QRect(0, 0, 1000, 22))
-        BranchingRatios.setMenuBar(self.menubar)
-        self.statusbar = QStatusBar(BranchingRatios)
-        self.statusbar.setObjectName(u"statusbar")
-        BranchingRatios.setStatusBar(self.statusbar)
-
-        self.retranslateUi(BranchingRatios)
-
-        QMetaObject.connectSlotsByName(BranchingRatios)
-    # setupUi
-
-    def retranslateUi(self, BranchingRatios):
-        BranchingRatios.setWindowTitle(QCoreApplication.translate("BranchingRatios", u"Branching Ratios", None))
-        self.comboBox.setCurrentText("")
-        self.comboBox.setPlaceholderText("")
-        self.MoleculeEdit.setPlaceholderText(QCoreApplication.translate("BranchingRatios", u"Please input the information of molecule", None))
-        self.ComputeRatios.setText(QCoreApplication.translate("BranchingRatios", u"Calculate branching ratios for all possible fragments", None))
-        self.OptionButton.setText(QCoreApplication.translate("BranchingRatios", u"Options", None))
-        self.RunButton.setText(QCoreApplication.translate("BranchingRatios", u"Run", None))
-    # retranslateUi
-
+app = QApplication([])
+PICS = Branching_Ratios()
+PICS.ui.show()
+app.exec_()
