@@ -11,7 +11,8 @@ class Generation:
         '''load the coordiante of atoms in the molecule and return a dictionary'''
         molecule_xyz = []
         filepath = os.getcwd()
-        file_path = filepath + '\\geometries\\' + self.molecule + '.xyz'
+        # file_path = filepath + '\\geometries\\' + self.molecule + '.xyz'
+        file_path = os.path.join(filepath, 'geometries', self.molecule + '.xyz')
         with open(file_path, 'r') as f:
             for i in range(0, 2):
                 next(f)
