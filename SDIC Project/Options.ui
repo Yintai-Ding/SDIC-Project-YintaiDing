@@ -16,6 +16,11 @@
     <height>400</height>
    </size>
   </property>
+  <property name="font">
+   <font>
+    <family>Arial</family>
+   </font>
+  </property>
   <property name="windowTitle">
    <string>Options</string>
   </property>
@@ -26,7 +31,7 @@
       <widget class="QLineEdit" name="energy_level">
        <property name="font">
         <font>
-         <family>Calibri</family>
+         <family>Arial</family>
          <pointsize>12</pointsize>
         </font>
        </property>
@@ -34,64 +39,58 @@
         <string/>
        </property>
        <property name="placeholderText">
-        <string>Please input the electron energy level of your data!  e.g. please input 'eighty' for 80eV</string>
+        <string>Please input the electron energy level of your data!  e.g. please input '80 eV' for 80eV</string>
        </property>
       </widget>
      </item>
      <item>
-      <widget class="QTableWidget" name="input_table">
-       <property name="enabled">
-        <bool>true</bool>
+      <widget class="QLabel" name="label">
+       <property name="font">
+        <font>
+         <family>Arial</family>
+         <pointsize>12</pointsize>
+        </font>
        </property>
-       <attribute name="horizontalHeaderShowSortIndicator" stdset="0">
-        <bool>true</bool>
-       </attribute>
-       <attribute name="horizontalHeaderStretchLastSection">
-        <bool>true</bool>
-       </attribute>
-       <row>
-        <property name="text">
-         <string/>
-        </property>
-       </row>
+       <property name="text">
+        <string>Table below includes the data of molecule in current database(70 eV):</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QTableWidget" name="currentTable">
        <column>
         <property name="text">
-         <string>name</string>
+         <string>Name</string>
         </property>
        </column>
        <column>
         <property name="text">
-         <string>cas number</string>
+         <string>Cas Number</string>
         </property>
        </column>
        <column>
         <property name="text">
-         <string>nist_mass_spec_number</string>
+         <string>Formula</string>
         </property>
        </column>
        <column>
         <property name="text">
-         <string>formula</string>
+         <string>Charge_Mass Ratio</string>
         </property>
        </column>
        <column>
         <property name="text">
-         <string>charge-mass ratio</string>
+         <string>Peak Height</string>
         </property>
        </column>
        <column>
         <property name="text">
-         <string>peak height</string>
+         <string>Branching Ratio</string>
         </property>
        </column>
        <column>
         <property name="text">
-         <string>branch ratio</string>
-        </property>
-       </column>
-       <column>
-        <property name="text">
-         <string>possible fragments</string>
+         <string>Possible Fragments</string>
         </property>
        </column>
       </widget>
@@ -115,7 +114,7 @@
         <widget class="QPushButton" name="add_row">
          <property name="font">
           <font>
-           <family>Calibri</family>
+           <family>Arial</family>
            <pointsize>12</pointsize>
           </font>
          </property>
@@ -128,7 +127,7 @@
         <widget class="QPushButton" name="remove_row">
          <property name="font">
           <font>
-           <family>Calibri</family>
+           <family>Arial</family>
            <pointsize>12</pointsize>
           </font>
          </property>
@@ -141,7 +140,7 @@
         <widget class="QPushButton" name="update_button">
          <property name="font">
           <font>
-           <family>Calibri</family>
+           <family>Arial</family>
            <pointsize>12</pointsize>
           </font>
          </property>
@@ -156,7 +155,7 @@
       <widget class="QPushButton" name="PossibleOptions">
        <property name="font">
         <font>
-         <family>Calibri</family>
+         <family>Arial</family>
          <pointsize>12</pointsize>
         </font>
        </property>

@@ -9,21 +9,20 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>2000</width>
+    <width>1021</width>
     <height>500</height>
    </rect>
   </property>
   <property name="sizePolicy">
-   <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+   <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
     <horstretch>0</horstretch>
     <verstretch>0</verstretch>
    </sizepolicy>
   </property>
-  <property name="minimumSize">
-   <size>
-    <width>2000</width>
-    <height>500</height>
-   </size>
+  <property name="font">
+   <font>
+    <family>Arial</family>
+   </font>
   </property>
   <property name="windowTitle">
    <string>Show Fragments</string>
@@ -35,7 +34,7 @@
       <widget class="QLabel" name="label">
        <property name="font">
         <font>
-         <family>Calibri</family>
+         <family>Arial</family>
          <pointsize>15</pointsize>
         </font>
        </property>
@@ -45,12 +44,64 @@
       </widget>
      </item>
      <item>
-      <widget class="QTextBrowser" name="textBrowser">
+      <widget class="QLabel" name="basic_information">
        <property name="font">
         <font>
-         <family>Calibri</family>
-         <pointsize>15</pointsize>
+         <family>Arial</family>
+         <pointsize>12</pointsize>
         </font>
+       </property>
+       <property name="text">
+        <string>This is line for basic information.</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QTableWidget" name="showTable">
+       <property name="font">
+        <font>
+         <family>Arial</family>
+         <pointsize>12</pointsize>
+        </font>
+       </property>
+       <property name="sizeAdjustPolicy">
+        <enum>QAbstractScrollArea::AdjustToContentsOnFirstShow</enum>
+       </property>
+       <attribute name="horizontalHeaderCascadingSectionResizes">
+        <bool>true</bool>
+       </attribute>
+       <row>
+        <property name="text">
+         <string/>
+        </property>
+       </row>
+       <column>
+        <property name="text">
+         <string>Branching Ratio</string>
+        </property>
+       </column>
+       <column>
+        <property name="text">
+         <string>Charge_Mass Ratio</string>
+        </property>
+       </column>
+       <column>
+        <property name="text">
+         <string>Possible Fragments</string>
+        </property>
+       </column>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLabel" name="information">
+       <property name="font">
+        <font>
+         <family>Arial</family>
+         <pointsize>12</pointsize>
+        </font>
+       </property>
+       <property name="text">
+        <string>**These data is collected from NIST and preset electron energy level to be 70eV </string>
        </property>
       </widget>
      </item>
