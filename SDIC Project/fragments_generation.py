@@ -11,7 +11,6 @@ class Generation:
         '''load the coordiante of atoms in the molecule and return a dictionary'''
         molecule_xyz = []
         filepath = os.getcwd()
-        # file_path = filepath + '\\geometries\\' + self.molecule + '.xyz'
         file_path = os.path.join(filepath, 'geometries', self.molecule + '.xyz')
         with open(file_path, 'r') as f:
             for i in range(0, 2):
@@ -24,7 +23,7 @@ class Generation:
                 else:
                     atom = line.split()
                     xyzitem = {'atom': atom[0], 'position': {"x": atom[1], "y": atom[2], "z": atom[3]}}
-                    molecule_xyz.append(xyzitem)
+                    molecule_xyz.append(xyzitem) #store the atoms and relative position into dictionaries and append to a list
         return molecule_xyz
 
     def check_bond(self):
@@ -40,7 +39,7 @@ class Generation:
                 distance = ((float(atom_position_i['x']) - float(atom_position_j['x']))** 2 + (float(atom_position_i['y']) - float(atom_position_j['y'])) ** 2 + (float(atom_position_i['z']) - float(atom_position_j['z'])) ** 2) ** (1./2)
                 radius_i = Atom(atom_name_i).radius
                 radius_j = Atom(atom_name_j).radius
-                if distance <= (radius_i + radius_j) * 1.2:
+                if distance <= (radius_i + radius_j) * 1.2: #check the relative position of atoms to check if any bond exist
                     status = 1
                     bond_status = {'first atom': atom_name_i + ' ' + str(i), 'second atom': atom_name_j + ' ' + str(j), 'status': status}
                     bonded.append(bond_status)
@@ -54,7 +53,7 @@ class Generation:
         according to the mass of them'''
         fragments_list = []# a list which contains all fragments and same atom with different positions makes differences
         combine_list = []# all possible combinations from all atoms in molecule
-        bonded_list = self.check_bond()
+        bonded_list = self.check_bond()# load the list contains all bonds in molecule
         true_fragments_list = []# the list which contains all possible fragments without repeatation
         
         for i in range(len(bonded_list)):
@@ -95,19 +94,17 @@ class Generation:
             fragment_mass = 0.0
             single_letter = ''
             for atoms in atom_list:
-                if ''.join(atom_list).count(atoms) >= 2:
-                    single_letter = atoms
-                # else:
-                #     single_letter = 'something_else'
+                if ''.join(atom_list).count(atoms) >= 2:# this codes is to distinguish some atoms which has repeated letters such as 'C' and 'Cl'
+                    single_letter = atoms# the special atom with single letter
             for atoms in atom_list:
-                if atoms.count(single_letter) == 1 and len(atoms) > 1:
-                    atom_number = fragment.count(atoms)
+                if atoms.count(single_letter) == 1 and len(atoms) > 1:# the special atom with two letters
+                    atom_number = fragment.count(atoms)# number of atom with two letters
                     single_number = fragment.count(single_letter)
-                    true_single_number = single_number - atom_number
+                    true_single_number = single_number - atom_number# number of atom with single letter
                     single_position = fragment_name.find(single_letter)
                     if true_single_number == 0:
                         fragment_name = fragment_name[0 : single_position - 2]
-                    elif true_single_number == 1:
+                    elif true_single_number == 1:# when the atom number is one, the formula will ignore the number and just leave the atom
                         fragment_name = fragment_name[0 : single_position + 1]
                     else:
                         fragment_name = fragment_name[0 : single_position + 1] + str(true_single_number)
@@ -120,7 +117,7 @@ class Generation:
                     atom_mass = Atom(atoms).mass
                     single_mass = Atom(single_letter).mass
                     fragment_mass = round(fragment_mass + atom_mass * atom_number - single_mass * atom_number)
-                else:    
+                else:# normal molecules steps 
                     atom_number = fragment.count(atoms)
                     if atom_number == 0:
                         continue
@@ -141,27 +138,29 @@ class Generation:
         return true_fragments_list, dict_by_mass
 
     def generate_combination(self, combination, bonded_list):
-        list_bonded = []#atoms which exist bond connection and could be connected into one fragment
-        tuple_extra = ()#exist bond connection but belongs to another fragment
-        list_hold = []#possible to join the first list but not tested yet
-        any_two = list(itertools.combinations((combination), 2))
+        '''The purpose of this function is check the list roughly. The filtration could be done by repeating this function'''
+        list_bonded = []# atoms which exist bond connection and could be connected into one fragment
+        tuple_extra = ()# exist bond connection but belongs to another fragment
+        list_hold = []# possible to join the first list but not tested yet
+        any_two = list(itertools.combinations((combination), 2))# for any two atoms in the combination
         
         for two_atom in any_two:
             for i in range(len(bonded_list)):
                 if two_atom[0] == bonded_list[i]['first atom'] or two_atom[0] == bonded_list[i]['second atom']:
                     if two_atom[1] == bonded_list[i]['first atom'] or two_atom[1] == bonded_list[i]['second atom']:
-                        if list_bonded == []:
+                        if list_bonded == []:# if the list is currently empty, add two atoms to list
                             list_bonded.append(two_atom[0])
                             list_bonded.append(two_atom[1])
-                        elif two_atom[0] in list_bonded and two_atom[1] not in list_bonded:
+                        elif two_atom[0] in list_bonded and two_atom[1] not in list_bonded:# if any atom exists in the list, then they could connect together as a fragment
                             list_bonded.append(two_atom[1])
                         elif two_atom[0] not in list_bonded and two_atom[1] in list_bonded:
                             list_bonded.append(two_atom[0])
                         elif two_atom[0] in list_bonded and two_atom[1] in list_bonded:
-                            list_bonded.append('')
+                            list_bonded.append('')# repeated atoms in list
                         else:
                             list_hold.append(two_atom)
-        if list_hold != []:
+        # since the code above is checking through the list, there may be atoms that could be connected together but appears in the list to early before could be found in the list
+        if list_hold != []: #repeat the step above to avoid missing atoms that could be connected
             for two_atom_hold in list_hold:
                 if two_atom_hold[0] in list_bonded and two_atom_hold[1] not in list_bonded:
                     list_bonded.append(two_atom_hold[1])
@@ -173,10 +172,11 @@ class Generation:
                     tuple1 = (two_atom[0], two_atom[1])
                     tuple_extra = tuple_extra + tuple1
         list_bonded = list(set(list_bonded))
-        tuple_extra = tuple(set(tuple_extra))
+        tuple_extra = tuple(set(tuple_extra))# not connected to this fragment but belongs to other fragments
         return list_bonded, tuple_extra
     
     def to_sup(self, s):
+        '''Add superscript to formula for further comparison'''
         sups = {u'0': u'\u2070',
                 u'1': u'\xb9',
                 u'2': u'\xb2',
@@ -191,6 +191,6 @@ class Generation:
 
 class Atom:
     def __init__(self, atom):
-        self.symbol = atom
+        self.symbol = atom #this class will generate atoms with properties radius and mass
         self.radius = elements.elements.RADIUS[atom]
         self.mass = elements.elements.MASS[atom]
