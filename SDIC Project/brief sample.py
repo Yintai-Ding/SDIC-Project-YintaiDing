@@ -1,4 +1,3 @@
-from msilib.schema import Error
 from PySide2 import QtWidgets, QtCore
 from PySide2.QtUiTools import QUiLoader
 from fragments_generation import *
@@ -86,40 +85,12 @@ class Options(QtWidgets.QDialog):
         self.ui = QUiLoader().load('Options.ui')
         self.ui.show()
         self.ui.PossibleOptions.setEnabled(False)
-        # self.ui.PossibleOptions.clicked.connect(self.confirm_input)
         self.ui.PossibleOptions.clicked.connect(self.upload_input)
-        # self.ui.input_table.setColumnWidth(3, 200)
-        # self.ui.input_table.setColumnWidth(6, 200)
         self.ui.add_row.clicked.connect(self.add_new_row)
         self.ui.remove_row.clicked.connect(self.remove_new_row)
         self.ui.update_button.clicked.connect(self.update_data)
         self.ui.currentTable.setColumnWidth(3, 200)
         self.ui.currentTable.setColumnWidth(6, 400)
-
-    # def confirm_input(self):
-    #     energy_level = str(self.ui.energy_level.text())
-    #     if energy_level == '':
-    #         QtWidgets.QMessageBox.critical(self.ui,
-    #         'Error',
-    #         "The energy level input is necessary")
-    #         raise ValueError('The energy level input is necessary!')
-    #     input_data = []
-    #     row_num = self.ui.input_table.rowCount()
-    #     for i in range(row_num):
-    #         list_input = []
-    #         for j in range(8):
-    #             input = str(self.ui.input_table.item(i, j))
-    #             if input == 'None':
-    #                 input = 'nan'
-    #             else:
-    #                 input = str(self.ui.input_table.item(i, j).text())
-    #             list_input.append(input)
-    #         input_data.append(tuple(list_input))
-    #     self.sql_table(energy_level, input_data)
-    #     QtWidgets.QMessageBox.about(self.ui,
-    #     'Result',
-    #     'Input Confirmed!')
-    #     self.ui.close()
 
     def add_new_row(self):
         self.ui.currentTable.insertRow(0)
@@ -130,58 +101,6 @@ class Options(QtWidgets.QDialog):
     def update_data(self):
         self.ui.currentTable.update()
         self.ui.PossibleOptions.setEnabled(True)
-
-    # def sql_table(self, energy_level, data):
-    #     try:
-    #         con = sqlite3.connect("data-20.db")
-    #     except sqlite3.Error:
-    #         print(sqlite3.Error)
-    #     cursor = con.cursor()
-    #     cursor.execute(f"""SELECT name from sqlite_master WHERE type = "table" AND name = '{energy_level}'""")
-    #     exist_status = cursor.fetchall()
-    #     if exist_status == []:
-    #         cursor.execute(f"""create table if not exists '{energy_level}'(name text, cas text, formula text, charge_mass_ratio number, peak_height number, branch_ratio number, optional_fragment text)""")
-    #         cursor.executemany(f"""INSERT INTO '{energy_level}' VALUES(?, ?, ?, ?, ?, ?, ?)""", data)
-    #     else:
-    #         molecule = data[0][0]
-    #         status = self.check_exist(energy_level, molecule)
-    #         if status == 0:
-    #             cursor.execute(f"""create table if not exists '{energy_level}'(name text, cas text, formula text, charge_mass_ratio number, peak_height number, branch_ratio number, optional_fragment text)""")
-    #             cursor.executemany(f"""INSERT INTO '{energy_level}' VALUES(?, ?, ?, ?, ?, ?, ?)""", data)
-    #         elif status == 1:
-    #             for single_row in data:
-    #                 charge_mass_ratio = single_row[3]
-    #                 peak_height = single_row[4]
-    #                 branch_ratio = single_row[5]
-    #                 optional_fragment = single_row[6]
-    #                 cursor.execute(f"""select * from '{energy_level}' where name = '{molecule}'""")
-    #                 check_mass = cursor.fetchall()
-    #                 mass_exist = 0
-    #                 for sample in check_mass:
-    #                     if str(sample[4]) == charge_mass_ratio:
-    #                         mass_exist = 1
-    #                 if mass_exist == 1:
-    #                     cursor.execute(f"""UPDATE '{energy_level}' SET peak_height = '{peak_height}' where name = '{molecule}' AND charge_mass_ratio = '{charge_mass_ratio}'""")
-    #                     cursor.execute(f"""UPDATE '{energy_level}' SET branch_ratio = '{branch_ratio}' where name = '{molecule}' AND charge_mass_ratio = '{charge_mass_ratio}'""")
-    #                     cursor.execute(f"""UPDATE '{energy_level}' SET optional_fragment = '{optional_fragment}' where name = '{molecule}' AND charge_mass_ratio = '{charge_mass_ratio}'""")
-    #                 else:
-    #                     cursor.execute(f"""INSERT INTO '{energy_level}' VALUES(?, ?, ?, ?, ?, ?, ?, ?)""", single_row)
-    #     con.commit()
-    #     self.ui.input_table.update()
-    #     con.close()
-
-    def check_exist(self, energy_level, molcule):
-        conn = sqlite3.connect("data-20.db")
-        cursor = conn.cursor()
-        sql = f"""select * from '{energy_level}'"""
-        cursor.execute(sql)
-        result = cursor.fetchall()
-        status = 0
-        for from_db in result:
-            if from_db[0] == molcule:
-                status = 1
-        conn.close()
-        return status
 
     def PrintCurrentData(self, list):
         dict_fragment = list[0]
@@ -207,7 +126,6 @@ class Options(QtWidgets.QDialog):
             QtWidgets.QMessageBox.critical(self.ui,
             'Error',
             "The energy level input is necessary")
-            raise ValueError('The energy level input is necessary!')
         input_data = []
         row_num = self.ui.currentTable.rowCount()
         for i in range(row_num):
@@ -220,7 +138,6 @@ class Options(QtWidgets.QDialog):
                     input = str(self.ui.currentTable.item(i, j).text())
                 list_input.append(input)
             input_data.append(tuple(list_input))
-        # self.sql_table(energy_level, input_data)
         try:
             con = sqlite3.connect("temp.db")     
         except sqlite3.Error:
@@ -318,6 +235,8 @@ class show_temp(QtWidgets.QDialog):
         except sqlite3.Error:
             print(sqlite3.Error)
         cursor = con.cursor()
+        if energy_level == '70 eV':
+            energy_level = 'main_data'
         cursor.execute(f"""SELECT name from sqlite_master WHERE type = "table" AND name = '{energy_level}'""")
         exist_status = cursor.fetchall()
         if exist_status == []:
