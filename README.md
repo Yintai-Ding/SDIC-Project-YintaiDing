@@ -1,6 +1,6 @@
 # SDIC Individual Project Yintai Ding
 
-####Last Update: 26/07/2022
+####Last Update: 27/07/2022
 The yml file is not completed yet. Now the GUI could recognise the formula input like 'CH4' but for other cases like 'CHHHH' is not available. This could be solved but there might be a lot of bugs behind :( so I leave as unsolved.
 
 ------------
@@ -51,9 +51,9 @@ However, there are cases that users input a wrong name or informal format of for
 
 ![wrongInput]
 
-There are also cases that a formula exist isomers such as 'C6H6' may represents 'Benzene' or '1,5-Hexadiyne'. When user input a formula with isomers, GUI will also show a error message on screen:
+There are also cases that a formula exist isomers such as 'C6H6' may represents 'Benzene' or '1,5-Hexadiyne'. When user input a formula with isomers, GUI will also show a error message inclued names of isomers on screen:
 
-![isomer_input]
+![isomers]
 
 If users have experimental data which might be more accurate and want to upload to the database, they could clicked on the '*Options*' button and input the data manually. For the users convenience, they could input the name or CAS number on the main page and click the '*Options*' button. Then the current data(only 70 eV) in database will be printed in the table. For now, users could edit the data directly instead of key in details step by step.
 
@@ -94,5 +94,5 @@ Just like the buttons on Option page, users could delete current lines or even d
 [submitOptions]: /SDIC%20Project/submitOptions.png
 [noCheckBox]: /SDIC%20Project/noCheckBox.png
 [wrongInput]: /SDIC%20Project/wrongInput.png
-[isomer_input]: /SDIC%20Project/isomer_input.png
+[isomers]: /SDIC%20Project/isomers.png
 [test_case]: /SDIC%20Project/test_case.png
