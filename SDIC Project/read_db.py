@@ -1,10 +1,11 @@
 import sqlite3
 
 def connection(molecule):
+    '''Link to database of 70 eV and load data as dictionaries and lists'''
     molecule_exist = 0
     conn = sqlite3.connect("data-20.db")
     cursor = conn.cursor()
-    sql = """select * from '70 eV'"""
+    sql = """select * from 'main_data'"""
     cursor.execute(sql)
     result = cursor.fetchall()
     dict_fragments = {}
@@ -14,7 +15,6 @@ def connection(molecule):
     total_ratio = 0
     for case in result:
         if case[0] == molecule:
-            # dict_fragments[str(case[5])] = case[6].split(',')
             dict_fragments[str(case[5])] = case[6]
             dict_mass[str(case[5])] = case[3]
             dict_peak[str(case[5])] = case[4]
@@ -27,10 +27,11 @@ def connection(molecule):
     return(dict_fragments, dict_mass, dict_peak, total_ratio, molecule_exist, list_basic)
 
 def translate_cas(casCode):
+    '''Transform the CAS number input to name of molecule'''
     cas_exist = 0
     conn = sqlite3.connect("data-20.db")
     cursor = conn.cursor()
-    sql = """select * from '70 eV'"""
+    sql = """select * from 'main_data'"""
     cursor.execute(sql)
     result = cursor.fetchall()
     for case in result:
@@ -41,11 +42,12 @@ def translate_cas(casCode):
     return(molecule, cas_exist)
 
 def translate_formula(formula):
+    '''Transform the formula of molecule to name'''
     formula_exist = 0
     list_formula = []
     conn = sqlite3.connect("data-20.db")
     cursor =conn.cursor()
-    sql = """select * from '70 eV'"""
+    sql = """select * from 'main_data'"""
     cursor.execute(sql)
     result = cursor.fetchall()
     for case in result:
