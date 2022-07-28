@@ -90,6 +90,11 @@
          <string>Possible Fragments</string>
         </property>
        </column>
+       <column>
+        <property name="text">
+         <string>Partial Ionisation Cross Sections</string>
+        </property>
+       </column>
       </widget>
      </item>
      <item>
@@ -101,7 +106,7 @@
         </font>
        </property>
        <property name="text">
-        <string>**These data is collected from NIST and preset electron energy level to be 70eV </string>
+        <string>**These data is collected from NIST and preset electron energy level to be 70 eV </string>
        </property>
       </widget>
      </item>
