@@ -4,7 +4,8 @@ from fragments_generation import *
 from read_db import *
 
 class Branching_Ratios(QtWidgets.QMainWindow):
-    signal_dict = QtCore.Signal(list)
+    '''This is the main window of the GUI. It will accept user's input of name, CAS number and formula of molecule'''
+    signal_dict = QtCore.Signal(list)# this signal will send list of data to Option and Show_fragments page
     def __init__(self):
         super(Branching_Ratios, self).__init__()
         self.ui = QUiLoader().load('brief sample.ui')
@@ -15,45 +16,47 @@ class Branching_Ratios(QtWidgets.QMainWindow):
         self.ui.UpdateButton.clicked.connect(self.open_temp)        
 
     def run(self):
+        '''Firstly check the status of user input and build connection to database'''
         checked = self.ui.ComputeRatios.isChecked()
         input = self.ui.MoleculeEdit.text()
         text = self.ui.comboBox.currentText()
-        if text == 'cas number':
+        if text == 'cas number':# some CAS number is empty in current database
             molecule, cas_exist = translate_cas(input)
             if cas_exist == 0:
                 QtWidgets.QMessageBox.critical(self.ui,
                 'Error',
                 "The input cas number doesn't exist in current data base.")
                 raise ValueError("The input cas number doesn't exist in current data base.")
-        elif text == 'formula':
+        elif text == 'formula':# some formulas exist isomers and should send a message to users
             molecule, formula_exist, list_formula = translate_formula(input)
             if formula_exist == 0:
                 QtWidgets.QMessageBox.critical(self.ui,
                 'Error',
                 "The input formula doesn't exist in current data base.")
                 raise ValueError("The input formula doesn't exist in current data base.")
-            if len(set(list_formula)) > 1:
+            if len(set(list_formula)) > 1:# when the input formula exists isomers, GUI will print out the name of isomers
                 QtWidgets.QMessageBox.critical(self.ui,
                 'Error',
-                "Your input formula exists isomers. Please try more accurate input.")
+                f"Your input formula exists isomers.\n({set(list_formula)}) \nPlease try more accurate input.")
                 raise ValueError("Your input formula exists isomers. Please try more accurate input.")
         else:
             molecule = str(input)
 
         dict_fragments, dict_mass, dict_peak, total_ratio, molecule_exist, list_basic = connection(molecule)
-        if molecule_exist == 0:
+        if molecule_exist == 0:# check if the name of molecule exist in current database
             QtWidgets.QMessageBox.critical(self.ui,
                 'Error',
                 "The input molecule name doesn't exist in current data base.")
-            raise ValueError("The input molecule name doesn't exist in current data base.")
-        if total_ratio < 0.99:
-            QtWidgets.QMessageBox.critical(self.ui,
-                'Wrong with Database',
-                "The data in database might be imcomplete. Please edit database with 'Option' button.")
-        elif total_ratio > 1.01:
-            QtWidgets.QMessageBox.critical(self.ui,
-                'Wrong with Database',
-                "The total of branching ratio is larger than limit(101%). Please edit database with 'Option' button.")
+            # raise ValueError("The input molecule name doesn't exist in current data base.")
+        else: 
+            if total_ratio < 1:# check if the branching ratio is sum up to 1
+                QtWidgets.QMessageBox.critical(self.ui,
+                    'Wrong with Database',
+                    "The data in database might be imcomplete. Please edit database with 'Option' button.")
+            elif total_ratio > 1:
+                QtWidgets.QMessageBox.critical(self.ui,
+                    'Wrong with Database',
+                    "The total of branching ratio is larger than limit(100%). Please edit database with 'Option' button.")
         if checked:
             list_information = [dict_fragments, dict_mass, dict_peak, list_basic]
             return list_information
@@ -65,12 +68,14 @@ class Branching_Ratios(QtWidgets.QMainWindow):
             raise LookupError("Don't forget to tick the check box!")
     
     def open_options(self):
+        '''Initialize Options class and send same signal to class'''
         data = self.run()
         self.options = Options()
         self.signal_dict.connect(self.options.PrintCurrentData)
         self.signal_dict.emit(data)
 
     def show_results(self):
+        '''Initialize show_fragments class and send signal to class'''
         data = self.run()
         self.fragment = show_fragments()
         self.signal_dict.connect(self.fragment.PrintToGui)
@@ -81,6 +86,7 @@ class Branching_Ratios(QtWidgets.QMainWindow):
 
 
 class Options(QtWidgets.QDialog):
+    '''This is a option widget that allow users to input missing data or edit current data. The input will be saved in a temporary database.'''
     def __init__(self):
         self.ui = QUiLoader().load('Options.ui')
         self.ui.show()
@@ -103,6 +109,7 @@ class Options(QtWidgets.QDialog):
         self.ui.PossibleOptions.setEnabled(True)
 
     def PrintCurrentData(self, list):
+        '''Print the current data in database to a table and allow users to edit directly'''
         dict_fragment = list[0]
         dict_mass = list[1]
         dict_peak = list[2]
@@ -121,6 +128,7 @@ class Options(QtWidgets.QDialog):
         self.ui.currentTable.update()
 
     def upload_input(self):
+        '''The users' input will not save in database directly. These will be upload to a temporary database names "temp.db"'''
         energy_level = str(self.ui.energy_level.text())
         if energy_level == '':
             QtWidgets.QMessageBox.critical(self.ui,
@@ -138,7 +146,7 @@ class Options(QtWidgets.QDialog):
                     input = str(self.ui.currentTable.item(i, j).text())
                 list_input.append(input)
             input_data.append(tuple(list_input))
-        try:
+        try: # build connection with the temporary database 
             con = sqlite3.connect("temp.db")     
         except sqlite3.Error:
             print(sqlite3.Error)
@@ -154,6 +162,7 @@ class Options(QtWidgets.QDialog):
         self.ui.close()
 
 class show_fragments(QtWidgets.QDialog):
+    '''This widget shows the possible fragments and branching ratio from database.'''
     def __init__(self):
         super(show_fragments, self).__init__()
         self.ui = QUiLoader().load('show_fragments.ui')
@@ -163,6 +172,7 @@ class show_fragments(QtWidgets.QDialog):
         self.ui.showTable.setColumnWidth(2, 400)
 
     def PrintToGui(self, list):
+        '''Print the current data to a table on screen'''
         dict_fragment = list[0]
         dict_mass = list[1]
         list_basic = list[3]
@@ -172,18 +182,20 @@ class show_fragments(QtWidgets.QDialog):
         current_row = 0
         for keys in dict_fragment:
             self.ui.showTable.setItem(current_row, 0, QtWidgets.QTableWidgetItem(str(round(float(keys), 7))))
+            # round the branching ratio to 7 digits 
             self.ui.showTable.setItem(current_row, 2, QtWidgets.QTableWidgetItem(str(dict_fragment[keys])))
             self.ui.showTable.setItem(current_row, 1, QtWidgets.QTableWidgetItem(str(dict_mass[keys])))
             current_row = current_row + 1
         self.ui.showTable.update()
 
 class show_temp(QtWidgets.QDialog):
+    '''Load the user-upload data from temporary database and make double check by members'''
     def __init__(self):
         super(show_temp, self).__init__()
         self.ui = QUiLoader().load('double_check.ui')
         self.ui.show()
         try:
-            con = sqlite3.connect("temp.db")     
+            con = sqlite3.connect("temp.db")# build connection to temporary database     
         except sqlite3.Error:
             print(sqlite3.Error)
         cursor = con.cursor()
@@ -208,12 +220,13 @@ class show_temp(QtWidgets.QDialog):
         con.close()
 
     def PrintTemp(self):
+        '''Print out the data with energy level'''
         con = sqlite3.connect("temp.db")
         cursor = con.cursor()
         energy_level = self.ui.energyOption.currentText()
         energy_level = energy_level[1:-2]
         sql = f"""select * from {energy_level}"""
-        cursor.execute(sql)
+        cursor.execute(sql)# select table with chosen energy level
         list = cursor.fetchall()
         self.ui.showTable.setRowCount(len(list))
         current_row = 0
@@ -230,6 +243,7 @@ class show_temp(QtWidgets.QDialog):
         con.close()
 
     def sql_table(self, energy_level, data):
+        '''Merge the uploaded data with current database'''
         try:
             con = sqlite3.connect("data-20.db")
         except sqlite3.Error:
@@ -239,16 +253,16 @@ class show_temp(QtWidgets.QDialog):
             energy_level = 'main_data'
         cursor.execute(f"""SELECT name from sqlite_master WHERE type = "table" AND name = '{energy_level}'""")
         exist_status = cursor.fetchall()
-        if exist_status == []:
+        if exist_status == []:# if the selected energy level doesn't exist any table, build a new one
             cursor.execute(f"""create table if not exists '{energy_level}'(name text, cas text, formula text, charge_mass_ratio number, peak_height number, branch_ratio number, optional_fragment text)""")
             cursor.executemany(f"""INSERT INTO '{energy_level}' VALUES(?, ?, ?, ?, ?, ?, ?)""", data)
         else:
-            molecule = data[0][0]
+            molecule = data[0][0]# only one molecule's data could be submitted once!
             status = self.check_exist(energy_level, molecule)
-            if status == 0:
+            if status == 0:# if the molecule's data didn't exist in this energy level
                 cursor.execute(f"""create table if not exists '{energy_level}'(name text, cas text, formula text, charge_mass_ratio number, peak_height number, branch_ratio number, optional_fragment text)""")
                 cursor.executemany(f"""INSERT INTO '{energy_level}' VALUES(?, ?, ?, ?, ?, ?, ?)""", data)
-            elif status == 1:
+            elif status == 1:# if the molecule's data exists
                 for single_row in data:
                     charge_mass_ratio = single_row[3]
                     peak_height = single_row[4]
@@ -260,7 +274,7 @@ class show_temp(QtWidgets.QDialog):
                     for sample in check_mass:
                         if str(sample[3]) == charge_mass_ratio:
                             mass_exist = 1
-                    if mass_exist == 1:
+                    if mass_exist == 1:# if the molecule's data for this mass exists
                         cursor.execute(f"""UPDATE '{energy_level}' SET peak_height = '{peak_height}' where name = '{molecule}' AND charge_mass_ratio = '{charge_mass_ratio}'""")
                         cursor.execute(f"""UPDATE '{energy_level}' SET branch_ratio = '{branch_ratio}' where name = '{molecule}' AND charge_mass_ratio = '{charge_mass_ratio}'""")
                         cursor.execute(f"""UPDATE '{energy_level}' SET optional_fragment = '{optional_fragment}' where name = '{molecule}' AND charge_mass_ratio = '{charge_mass_ratio}'""")
@@ -271,6 +285,7 @@ class show_temp(QtWidgets.QDialog):
         con.close()
 
     def submitToBase(self):
+        '''Merge the input data to the original database.'''
         energy_level = self.ui.energyOption.currentText()
         energy_level = str(energy_level[2:-3])
         input_data = []
@@ -287,10 +302,11 @@ class show_temp(QtWidgets.QDialog):
         'Upload successful!')
         conn = sqlite3.connect('temp.db')
         cursor_2 = conn.cursor()
-        cursor_2.execute(f"DROP table if exists '{energy_level}'")
+        cursor_2.execute(f"DROP table if exists '{energy_level}'")# delete the table after being submitted
         self.ui.close()
     
     def check_exist(self, energy_level, molcule):
+        '''Check if any molecule's data for specific energy level has already exist'''
         conn = sqlite3.connect("data-20.db")
         cursor = conn.cursor()
         sql = f"""select * from '{energy_level}'"""
@@ -316,6 +332,7 @@ class show_temp(QtWidgets.QDialog):
         con.close()
 
 class identity(QtWidgets.QWidget):
+    '''This is left for checking identity of users to block users from edit current database directly.'''
     def __init__(self):
         super(identity, self).__init__()
         self.ui = QUiLoader().load('identity.ui')
@@ -324,6 +341,7 @@ class identity(QtWidgets.QWidget):
         self.ui.CancelButton.clicked.connect(self.ui.close)
     
     def clickOk(self):
+        '''This question could be changed if necessary.'''
         text = self.ui.Input.text()
         if text == 'London':
             self.temp = show_temp()
