@@ -105,8 +105,18 @@ class Options(QtWidgets.QDialog):
         self.ui.currentTable.removeRow(0)
 
     def update_data(self):
+        '''This will update the branching ratios in table and prepare for upload.'''
         self.ui.currentTable.update()
         self.ui.PossibleOptions.setEnabled(True)
+        list_peak = []
+        total_peak = 0
+        total_row = self.ui.currentTable.rowCount()
+        for i in range(total_row):
+            list_peak.append(self.ui.currentTable.item(i, 4).text())
+            total_peak = total_peak + int(self.ui.currentTable.item(i, 4).text())
+        for j in range(total_row):
+            branching_ratio = int(list_peak[j]) / total_peak
+            self.ui.currentTable.setItem(j, 5, QtWidgets.QTableWidgetItem(str(branching_ratio)))
 
     def PrintCurrentData(self, list):
         '''Print the current data in database to a table and allow users to edit directly'''
@@ -146,6 +156,14 @@ class Options(QtWidgets.QDialog):
                     input = str(self.ui.currentTable.item(i, j).text())
                 list_input.append(input)
             input_data.append(tuple(list_input))
+        total_ratio = 0
+        for single_data in input_data:
+            total_ratio = total_ratio + float(single_data[5])
+        if round(total_ratio, 7) != 1:# double check if the total ratio is 1
+            QtWidgets.QMessageBox.critical(self.ui,
+            'Error',
+            "The current total ratio doesn't sum up to 1!")
+            raise ValueError("The current total ratio doesn't sum up to 1!")
         try: # build connection with the temporary database 
             con = sqlite3.connect("temp.db")     
         except sqlite3.Error:
@@ -170,12 +188,14 @@ class show_fragments(QtWidgets.QDialog):
         self.ui.showTable.setColumnWidth(0, 250)
         self.ui.showTable.setColumnWidth(1, 250)
         self.ui.showTable.setColumnWidth(2, 400)
+        self.ui.showTable.setColumnWidth(3, 400)
 
     def PrintToGui(self, list):
         '''Print the current data to a table on screen'''
         dict_fragment = list[0]
         dict_mass = list[1]
         list_basic = list[3]
+        cross_section = self.PrintPartial(list_basic[0], 70)
         string = f"Molecule: ({list_basic[0]}) Formula: ({list_basic[2]}) Cas number ({list_basic[1]})"
         self.ui.basic_information.setText(string)
         self.ui.showTable.setRowCount(len(dict_fragment))
@@ -185,8 +205,25 @@ class show_fragments(QtWidgets.QDialog):
             # round the branching ratio to 7 digits 
             self.ui.showTable.setItem(current_row, 2, QtWidgets.QTableWidgetItem(str(dict_fragment[keys])))
             self.ui.showTable.setItem(current_row, 1, QtWidgets.QTableWidgetItem(str(dict_mass[keys])))
+            if cross_section == "":
+                partial_cross_section = "No ionisation cross section data found."
+            else:
+                partial_cross_section = round(float(keys) * float(cross_section), 7)
+            self.ui.showTable.setItem(current_row, 3, QtWidgets.QTableWidgetItem(str(partial_cross_section)))
             current_row = current_row + 1
         self.ui.showTable.update()
+
+    def PrintPartial(self, molecule, energy_level):
+        con_p = sqlite3.connect('data-20.db')
+        cursor_p = con_p.cursor()
+        sql = """select * from 'energy_vs_total_beb'"""
+        cursor_p.execute(sql)
+        result = cursor_p.fetchall()
+        cross_section = ""
+        for total_beb in result:
+            if total_beb[0] == molecule and total_beb[2] == energy_level:
+                cross_section = total_beb[3]
+        return cross_section
 
 class show_temp(QtWidgets.QDialog):
     '''Load the user-upload data from temporary database and make double check by members'''
