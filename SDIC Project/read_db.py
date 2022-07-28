@@ -28,6 +28,7 @@ def connection(molecule):
 
 def translate_cas(casCode):
     '''Transform the CAS number input to name of molecule'''
+    molecule = ''
     cas_exist = 0
     conn = sqlite3.connect("data-20.db")
     cursor = conn.cursor()
@@ -43,6 +44,7 @@ def translate_cas(casCode):
 
 def translate_formula(formula):
     '''Transform the formula of molecule to name'''
+    molecule = ''
     formula_exist = 0
     list_formula = []
     conn = sqlite3.connect("data-20.db")
