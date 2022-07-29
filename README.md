@@ -8,7 +8,7 @@ Whats' new:
 
 (29/07/2022)Now the requirements.txt is available.
 
-(28/07/2022)Now the show_fragments page could load BEB total ionisation cross section for each molecule at 70 eV and show partial ionisation cross section for each branching ratio. And on Option page the branching ratio in table will be recalculated base on users' input of peak height. This will make sure the total branching ratio for each molecule will sum up to 1.
+(28/07/2022)Now the show_fragments page could load BEB total ionization cross section for each molecule at 70 eV and show partial ionization cross section for each branching ratio. And on Option page the branching ratio in table will be recalculated base on users' input of peak height. This will make sure the total branching ratio for each molecule will sum up to 1.
 
 ------------
 
@@ -16,7 +16,7 @@ Whats' new:
 
 ----------
 
-This repository is used as a backup on Github for [Yintai Ding](https://github.com/Yintai-Ding/SDIC-Project-YintaiDing)'s postgraduate individual project. The full name of the project is **'Partial Ionisation Cross Sections MSc Project'** and the belongs to **Unversity College London, MSc Scientific and Data Intensive Computing**. This project is supervised by Prof. Jonathan Tennyson and Dr. Bridgette Copper.
+This repository is used as a backup on Github for [Yintai Ding](https://github.com/Yintai-Ding/SDIC-Project-YintaiDing)'s postgraduate individual project. The full name of the project is **'Partial Ionization Cross Sections MSc Project'** and the belongs to **Unversity College London, MSc Scientific and Data Intensive Computing**. This project is supervised by Prof. Jonathan Tennyson and Dr. Bridgette Copper.
 
 This project has two main components. The first is obtain mass spectrum data from the [NIST chemical web book](https://webbook.nist.gov/chemistry/) and the second part is to design a user friendly graphical interface to interact with the database. The first part is completed by Lifeng Luo and the second is maintained by Yintai Ding. 
 
