@@ -1,9 +1,14 @@
 # SDIC Individual Project Yintai Ding
 
-####Last Update: 28/07/2022
+#### Last Update: 28/07/2022
+
 The yml file is not completed yet. Now the GUI could recognise the formula input like 'CH4' but for other cases like 'CHHHH' is not available. This could be solved but there might be a lot of bugs behind :( so I leave as unsolved.
 
-Whats' new: Now the show_fragments page could load BEB total ionisation cross section for each molecule at 70 eV and show partial ionisation cross section for each branching ratio. And on Option page the branching ratio in table will be recalculated base on users' input of peak height. This will make sure the total branching ratio for each molecule will sum up to 1.
+Whats' new: 
+
+(29/07/2022)Now the requirements.txt is available.
+
+(28/07/2022)Now the show_fragments page could load BEB total ionisation cross section for each molecule at 70 eV and show partial ionisation cross section for each branching ratio. And on Option page the branching ratio in table will be recalculated base on users' input of peak height. This will make sure the total branching ratio for each molecule will sum up to 1.
 
 ------------
 
