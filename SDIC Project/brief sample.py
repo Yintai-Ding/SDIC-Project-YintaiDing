@@ -206,7 +206,7 @@ class show_fragments(QtWidgets.QDialog):
             self.ui.showTable.setItem(current_row, 2, QtWidgets.QTableWidgetItem(str(dict_fragment[keys])))
             self.ui.showTable.setItem(current_row, 1, QtWidgets.QTableWidgetItem(str(dict_mass[keys])))
             if cross_section == "":
-                partial_cross_section = "No ionisation cross section data found."
+                partial_cross_section = "No ionization cross section data found."
             else:
                 partial_cross_section = round(float(keys) * float(cross_section), 7)
             self.ui.showTable.setItem(current_row, 3, QtWidgets.QTableWidgetItem(str(partial_cross_section)))
