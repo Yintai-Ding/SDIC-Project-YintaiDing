@@ -24,7 +24,7 @@ This project has two main components. The first is obtain mass spectrum data fro
 
 --------------
 
-There is a zip which name is'**data-20.zip**' which users should decompress to find the database. Remember to move the '**data-20.db**' file to the folder '**SDIC Project**' or users could change file path in the program manually. 
+There is a zip which name is'**data-20.zip**' inside of the tag '**Database**'which users should download and decompress to find the database. Remember to move the '**data-20.db**' file to the folder '**SDIC Project**' or users could change file path in the program manually. 
 
 Within the '**SDIC Project**' folder there are two subfolder '**elements**' and '**geometries**'. These folders contains information for elements and relative position for atoms in sample molecules which are necessary to check the validation of data in the database. The '**fragments_generation.py**' contains functions help checking the validation of data. If the users wants to check the validation of the data in the provided database, they could run the file '**test_case.py**' by: 
 
