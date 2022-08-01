@@ -4,7 +4,7 @@ from fragments_generation import *
 def check(formula, name):
     '''Load fragments of molecule from database and generated from functions. Make comparison and check missing fragments'''
     molecule_YT = Generation(formula)# use the formula to generate possible fragments through bonds
-    list_YT, dict_YT = molecule_YT.fragments()
+    list_YT = molecule_YT.fragments()
     conn = sqlite3.connect("data-20.db")# use the name of molecule to load possible fragments from database
     cursor = conn.cursor()
     sql = """select * from 'main_data'"""
@@ -22,4 +22,4 @@ def check(formula, name):
     print(f'Possible missing fragments in database: {difference_YT}')
     conn.close()
 
-check('ccl4', 'Carbon Tetrachloride')
+check('Methane', 'Methane')

@@ -156,6 +156,19 @@
     </layout>
    </item>
    <item>
+    <widget class="QLabel" name="label_2">
+     <property name="font">
+      <font>
+       <family>Arial</family>
+       <pointsize>12</pointsize>
+      </font>
+     </property>
+     <property name="text">
+      <string>** Only one molecule's data could be submitted once!</string>
+     </property>
+    </widget>
+   </item>
+   <item>
     <widget class="QPushButton" name="submitTable">
      <property name="font">
       <font>

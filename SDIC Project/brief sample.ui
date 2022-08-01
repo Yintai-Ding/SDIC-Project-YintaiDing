@@ -178,6 +178,13 @@
        </widget>
       </item>
       <item>
+       <widget class="QPushButton" name="editTICS">
+        <property name="text">
+         <string>Edit TICS</string>
+        </property>
+       </widget>
+      </item>
+      <item>
        <widget class="QPushButton" name="UpdateButton">
         <property name="text">
          <string>Update</string>

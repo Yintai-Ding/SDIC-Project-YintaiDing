@@ -13,7 +13,8 @@ class Branching_Ratios(QtWidgets.QMainWindow):
         self.ui.RunButton.clicked.connect(self.show_results)
         self.ui.MoleculeEdit.returnPressed.connect(self.show_results)
         self.ui.comboBox.addItems(['name', 'cas number', 'formula'])
-        self.ui.UpdateButton.clicked.connect(self.open_temp)        
+        self.ui.UpdateButton.clicked.connect(self.open_temp)    
+        self.ui.editTICS.clicked.connect(self.open_TICS)    
 
     def run(self):
         '''Firstly check the status of user input and build connection to database'''
@@ -47,13 +48,12 @@ class Branching_Ratios(QtWidgets.QMainWindow):
             QtWidgets.QMessageBox.critical(self.ui,
                 'Error',
                 "The input molecule name doesn't exist in current data base.")
-            # raise ValueError("The input molecule name doesn't exist in current data base.")
         else: 
-            if total_ratio < 1:# check if the branching ratio is sum up to 1
+            if round(total_ratio, 5) < 1:# check if the branching ratio is sum up to 1
                 QtWidgets.QMessageBox.critical(self.ui,
                     'Wrong with Database',
                     "The data in database might be imcomplete. Please edit database with 'Option' button.")
-            elif total_ratio > 1:
+            elif round(total_ratio, 5) > 1:# Here the round up digit is set to 5. This could be rised if necessary.
                 QtWidgets.QMessageBox.critical(self.ui,
                     'Wrong with Database',
                     "The total of branching ratio is larger than limit(100%). Please edit database with 'Option' button.")
@@ -84,6 +84,11 @@ class Branching_Ratios(QtWidgets.QMainWindow):
     def open_temp(self):
         self.identity = identity()
 
+    def open_TICS(self):
+        data = self.run()
+        self.TICS = EditTICS()
+        self.signal_dict.connect(self.TICS.PrintTICS)
+        self.signal_dict.emit(data)
 
 class Options(QtWidgets.QDialog):
     '''This is a option widget that allow users to input missing data or edit current data. The input will be saved in a temporary database.'''
@@ -100,9 +105,12 @@ class Options(QtWidgets.QDialog):
 
     def add_new_row(self):
         self.ui.currentTable.insertRow(0)
+        self.ui.currentTable.setItem(0, 0, QtWidgets.QTableWidgetItem(str(self.ui.currentTable.item(1, 0).text())))
+        self.ui.currentTable.setItem(0, 1, QtWidgets.QTableWidgetItem(str(self.ui.currentTable.item(1, 1).text())))
 
     def remove_new_row(self):
-        self.ui.currentTable.removeRow(0)
+        currentRow = self.ui.currentTable.currentRow()
+        self.ui.currentTable.removeRow(currentRow)
 
     def update_data(self):
         '''This will update the branching ratios in table and prepare for upload.'''
@@ -206,12 +214,13 @@ class show_fragments(QtWidgets.QDialog):
             self.ui.showTable.setItem(current_row, 2, QtWidgets.QTableWidgetItem(str(dict_fragment[keys])))
             self.ui.showTable.setItem(current_row, 1, QtWidgets.QTableWidgetItem(str(dict_mass[keys])))
             if cross_section == "":
-                partial_cross_section = "No ionization cross section data found."
+                partial_cross_section = "No partial ionization cross section data found."
             else:
                 partial_cross_section = round(float(keys) * float(cross_section), 7)
             self.ui.showTable.setItem(current_row, 3, QtWidgets.QTableWidgetItem(str(partial_cross_section)))
             current_row = current_row + 1
         self.ui.showTable.update()
+        self.PrintPossible(list_basic[0])
 
     def PrintPartial(self, molecule, energy_level):
         con_p = sqlite3.connect('data-20.db')
@@ -224,6 +233,26 @@ class show_fragments(QtWidgets.QDialog):
             if total_beb[0] == molecule and total_beb[2] == energy_level:
                 cross_section = total_beb[3]
         return cross_section
+
+    def PrintPossible(self, molecule):
+        '''Load fragments of molecule from database and generated from functions. Make comparison and check missing fragments'''
+        molecule_bond = Generation(molecule)
+        list_bond = molecule_bond.fragments()
+        if list_bond == []:# The data for relative position of atoms is limited. Only 30 molecules.
+            self.ui.other_possible.append("Currently no possible missing fragment could be proved as exist.")
+        else:
+            conn = sqlite3.connect("data-20.db")
+            cursor = conn.cursor()
+            sql = """select * from 'main_data'"""
+            cursor.execute(sql)
+            result = cursor.fetchall()
+            list_data = []
+            for row in result:
+                if row[0] == molecule:
+                    list_data.extend(row[6].split(','))
+            difference_bond = set(list_bond).difference(set(list_data))# check the difference
+            self.ui.other_possible.append(f"Possible missing fragments in database: {difference_bond}")
+            conn.close()
 
 class show_temp(QtWidgets.QDialog):
     '''Load the user-upload data from temporary database and make double check by members'''
@@ -388,6 +417,103 @@ class identity(QtWidgets.QWidget):
                 'Access denied!')
         self.ui.close()
     
+class EditTICS(QtWidgets.QDialog):
+    def __init__(self):
+        super(EditTICS, self).__init__()
+        self.ui = QUiLoader().load('editBEB.ui')
+        self.ui.show()
+        self.ui.addBEB.clicked.connect(self.add_new_row)
+        self.ui.deleteBEB.clicked.connect(self.remove_new_row)
+        self.ui.updateBEB.clicked.connect(self.update_data)
+        self.ui.submitBEB.setEnabled(False)
+        self.ui.submitBEB.clicked.connect(self.submit_data)
+
+    def PrintTICS(self, list):
+        list_basic = list[3]
+        molecule = list_basic[0]
+        con = sqlite3.connect("data-20.db")
+        cursor = con.cursor()
+        sql = f"SELECT energy, beb FROM 'energy_vs_total_beb' WHERE name = '{molecule}'"
+        cursor.execute(sql)
+        result = cursor.fetchall()
+        if result != []:
+            self.ui.currentBEB.setRowCount(len(result))
+            current_row = 0
+            for energy in result:
+                self.ui.currentBEB.setItem(current_row, 0, QtWidgets.QTableWidgetItem(str(molecule)))
+                self.ui.currentBEB.setItem(current_row, 1, QtWidgets.QTableWidgetItem(str(list[3][2])))
+                self.ui.currentBEB.setItem(current_row, 2, QtWidgets.QTableWidgetItem(str(energy[0])))
+                self.ui.currentBEB.setItem(current_row, 3, QtWidgets.QTableWidgetItem(str(energy[1])))
+                current_row = current_row + 1
+        else:
+            QtWidgets.QMessageBox.information(self.ui,
+            'Information',
+            "The Total Ionization Cross Section for this molecule is currently empty. Please input data manually.")    
+        self.ui.currentBEB.update()
+
+    def add_new_row(self):
+        self.ui.currentBEB.insertRow(0)
+        self.ui.currentBEB.setItem(0, 0, QtWidgets.QTableWidgetItem(str(self.ui.currentBEB.item(1, 0).text())))
+        self.ui.currentBEB.setItem(0, 1, QtWidgets.QTableWidgetItem(str(self.ui.currentBEB.item(1, 1).text())))
+
+    def remove_new_row(self):
+        currentRow = self.ui.currentBEB.currentRow()
+        self.ui.currentBEB.removeRow(currentRow)
+
+    def update_data(self):
+        self.ui.currentBEB.update()
+        self.ui.submitBEB.setEnabled(True)
+
+    def submit_data(self):
+        input_beb = []
+        row_num = self.ui.currentBEB.rowCount()
+        for i in range(row_num):
+            list_input = []
+            for j in range(4):
+                input = str(self.ui.currentBEB.item(i, j))
+                if input == 'None':
+                    input = 'N/A'
+                else:
+                    input = str(self.ui.currentBEB.item(i, j).text())
+                list_input.append(input)
+            input_beb.append(tuple(list_input))
+        choice = QtWidgets.QMessageBox.question(self.ui,
+        'Check',
+        'Please double check your input before submit the data!')
+        if choice == QtWidgets.QMessageBox.No:
+            raise ValueError("Pause the program for further check.")
+        try: # build connection with the data-20 database 
+            con = sqlite3.connect("data-20.db")     
+        except sqlite3.Error:
+            print(sqlite3.Error)
+        cursor = con.cursor()
+        for line in input_beb:
+            status = self.check_exist(line[2], line[0])
+            if status == 1:
+                cursor.execute(f"""UPDATE 'energy_vs_total_beb' SET beb = '{line[3]}' where name = '{line[0]}' and energy = '{line[2]}'""")
+            else:
+                cursor.execute(f"""INSERT INTO 'energy_vs_total_beb'(name, formula, energy, BEB) VALUES(?, ?, ?, ?)""", line)            
+        QtWidgets.QMessageBox.about(self.ui,
+        'Result',
+        'Input Confirmed!')
+        con.commit()
+        con.close()
+        self.ui.close()
+
+    def check_exist(self, energy_level, molcule):
+        '''Check if any molecule's TICS for specific energy level has already exist'''
+        conn = sqlite3.connect("data-20.db")
+        cursor = conn.cursor()
+        sql = """select * from 'energy_vs_total_beb'"""
+        cursor.execute(sql)
+        result = cursor.fetchall()
+        status = 0
+        for from_db in result:
+            if from_db[0] == molcule and str(from_db[2]) == energy_level:
+                status = 1
+        conn.close()
+        return status
+
 QtCore.QCoreApplication.setAttribute(QtCore.Qt.AA_ShareOpenGLContexts)
 app = QtWidgets.QApplication([])
 PICS = Branching_Ratios()
