@@ -98,6 +98,29 @@
       </widget>
      </item>
      <item>
+      <widget class="QLabel" name="label_possible">
+       <property name="font">
+        <font>
+         <family>Arial</family>
+         <pointsize>12</pointsize>
+        </font>
+       </property>
+       <property name="text">
+        <string>There could be other possible fragments not detected by mass spectrum: </string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QTextBrowser" name="other_possible">
+       <property name="font">
+        <font>
+         <family>Arial</family>
+         <pointsize>12</pointsize>
+        </font>
+       </property>
+      </widget>
+     </item>
+     <item>
       <widget class="QLabel" name="information">
        <property name="font">
         <font>
