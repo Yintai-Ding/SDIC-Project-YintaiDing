@@ -1,10 +1,12 @@
 # SDIC Individual Project Yintai Ding
 
-#### Last Update: 01/08/2022
+#### Last Update: 03/08/2022
 
 Now the GUI could recognise the formula input like 'CH4' but for other cases like 'CHHHH' is not available. This could be solved but there might be a lot of bugs behind :( so I leave it as unsolved.
 
 Whats' new: 
+
+(03/08/2022)Now some test cases are added and users could test some functions via command 'pytest'. But this test file can only test some functions but not the GUI.
 
 (01/08/2022)Now users could upload or edit BEB Total Ionization Cross Sections via new button 'Edit TICS'.
 
