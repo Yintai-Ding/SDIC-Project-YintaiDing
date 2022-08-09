@@ -166,21 +166,28 @@ class Generation:
                             list_hold.append(two_atom)
         # since the code above is checking through the list, there may be atoms that could be connected together but appears in the list to early before could be found in the list
         if list_hold != []: #repeat the step above to avoid missing atoms that could be connected
-            for two_atom_hold in list_hold:
-                if two_atom_hold[0] in list_bonded and two_atom_hold[1] not in list_bonded:
-                    list_bonded.append(two_atom_hold[1])
-                elif two_atom_hold[0] not in list_bonded and two_atom_hold[1] in list_bonded:
-                    list_bonded.append(two_atom_hold[0])
-                elif two_atom_hold[0] in list_bonded and two_atom_hold[1] in list_bonded:
-                    list_bonded.append('')
-                else:
-                    tuple1 = (two_atom[0], two_atom[1])
-                    tuple_extra = tuple_extra + tuple1
+            list_hold_old = []
+            while list_hold != list_hold_old: #check if any two atom group has been connected to fragment
+                tuple_extra = () # initialize the tuple of atoms belongs to other fragments
+                list_hold_old = list_hold #if the list doesn't change after the loop, there is no group of atoms to be connected to the fragment
+                for two_atom_hold in list_hold:
+                    if two_atom_hold[0] in list_bonded and two_atom_hold[1] not in list_bonded:
+                        list_bonded.append(two_atom_hold[1])
+                        list_hold.remove(two_atom_hold)
+                    elif two_atom_hold[0] not in list_bonded and two_atom_hold[1] in list_bonded:
+                        list_bonded.append(two_atom_hold[0])
+                        list_hold.remove(two_atom_hold)
+                    elif two_atom_hold[0] in list_bonded and two_atom_hold[1] in list_bonded:
+                        list_bonded.append('')
+                        list_hold.remove(two_atom_hold)
+                    else:
+                        tuple_atom = (two_atom_hold[0], two_atom_hold[1])
+                        tuple_extra = tuple_extra + tuple_atom
         list_bonded = list(set(list_bonded))
         tuple_extra = tuple(set(tuple_extra))# not connected to this fragment but belongs to other fragments
         return list_bonded, tuple_extra
     
-    def to_sup(self, s):
+    def to_sup(self, strings):
         '''Add superscript to formula for further comparison'''
         sups = {u'0': u'\u2070',
                 u'1': u'\xb9',
@@ -192,7 +199,7 @@ class Generation:
                 u'7': u'\u2077',
                 u'8': u'\u2078',
                 u'9': u'\u2079'}
-        return ''.join(sups.get(char, char) for char in s)
+        return ''.join(sups.get(char, char) for char in strings)
 
 class Atom:
     def __init__(self, atom):
