@@ -125,6 +125,20 @@
      </layout>
     </item>
     <item>
+     <widget class="QLabel" name="label_isomer">
+      <property name="text">
+       <string>Choose your target molecule within the below combo box: </string>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QComboBox" name="comboBox_isomer">
+      <property name="placeholderText">
+       <string>Name of Isomers</string>
+      </property>
+     </widget>
+    </item>
+    <item>
      <spacer name="verticalSpacer">
       <property name="orientation">
        <enum>Qt::Vertical</enum>

@@ -14,13 +14,22 @@ class Branching_Ratios(QtWidgets.QMainWindow):
         self.ui.MoleculeEdit.returnPressed.connect(self.show_results)
         self.ui.comboBox.addItems(['name', 'cas number', 'formula'])
         self.ui.UpdateButton.clicked.connect(self.open_temp)    
-        self.ui.editTICS.clicked.connect(self.open_TICS)    
+        self.ui.editTICS.clicked.connect(self.open_TICS)
+        self.ui.label_isomer.setEnabled(False)
+        self.ui.comboBox_isomer.setEnabled(False)# this widget will be enabled when isomers exist for formula input    
 
     def run(self):
         '''Firstly check the status of user input and build connection to database'''
         checked = self.ui.ComputeRatios.isChecked()
         input = self.ui.MoleculeEdit.text()
         text = self.ui.comboBox.currentText()
+        isomer_choice = self.ui.comboBox_isomer.currentText()
+        if isomer_choice != '' and isomer_choice != 'Not isomers':
+            input = isomer_choice
+            text = 'name'
+        elif isomer_choice == 'Not isomers':# User wish to try another input
+            self.ui.comboBox_isomer.clear()
+            self.ui.comboBox_isomer.setEnabled(False)
         if text == 'cas number':# some CAS number is empty in current database
             molecule, cas_exist = translate_cas(input)
             if cas_exist == 0:
@@ -39,6 +48,11 @@ class Branching_Ratios(QtWidgets.QMainWindow):
                 QtWidgets.QMessageBox.critical(self.ui,
                 'Error',
                 f"Your input formula exists isomers.\n({set(list_formula)}) \nPlease try more accurate input.")
+                self.ui.label_isomer.setEnabled(True)
+                self.ui.comboBox_isomer.setEnabled(True)
+                self.ui.comboBox_isomer.addItem('Not isomers')
+                for isomer in set(list_formula):# add isomers to combo box for further choices
+                    self.ui.comboBox_isomer.addItem(isomer)
                 raise ValueError("Your input formula exists isomers. Please try more accurate input.")
         else:
             molecule = str(input)
@@ -388,6 +402,8 @@ class show_temp(QtWidgets.QDialog):
     def deleteLine(self):
         currentRow = self.ui.showTable.currentRow()
         self.ui.showTable.removeRow(currentRow)
+        self.ui.showTable.update()
+
 
     def deleteTable(self):
         energy_level = self.ui.energyOption.currentText()
@@ -396,6 +412,7 @@ class show_temp(QtWidgets.QDialog):
         cursor = con.cursor()
         cursor.execute(f"DROP table if exists '{energy_level}'")
         con.close()
+        self.ui.showTable.clearContents()
 
 class identity(QtWidgets.QWidget):
     '''This is left for checking identity of users to block users from edit current database directly.'''
