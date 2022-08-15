@@ -36,14 +36,14 @@ class Branching_Ratios(QtWidgets.QMainWindow):
                 QtWidgets.QMessageBox.critical(self.ui,
                 'Error',
                 "The input cas number doesn't exist in current data base.")
-                raise ValueError("The input cas number doesn't exist in current data base.")
+                raise LookupError("The input cas number doesn't exist in current data base.")
         elif text == 'formula':# some formulas exist isomers and should send a message to users
             molecule, formula_exist, list_formula = translate_formula(input)
             if formula_exist == 0:
                 QtWidgets.QMessageBox.critical(self.ui,
                 'Error',
                 "The input formula doesn't exist in current data base.")
-                raise ValueError("The input formula doesn't exist in current data base.")
+                raise LookupError("The input formula doesn't exist in current data base.")
             if len(set(list_formula)) > 1:# when the input formula exists isomers, GUI will print out the name of isomers
                 QtWidgets.QMessageBox.critical(self.ui,
                 'Error',
@@ -91,6 +91,8 @@ class Branching_Ratios(QtWidgets.QMainWindow):
     def show_results(self):
         '''Initialize show_fragments class and send signal to class'''
         data = self.run()
+        if data[0] == {}:
+            raise LookupError("The input molecule name doesn't exist in current data base.")
         self.fragment = show_fragments()
         self.signal_dict.connect(self.fragment.PrintToGui)
         self.signal_dict.emit(data)
